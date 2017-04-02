@@ -12,3 +12,13 @@ depcomp
 install-sh
 ltmain.sh
 missing
+*.o
+*.lo
+.deps/
+.libs/
+Makefile
+*.dblite
+excons.cache
+*.automake.inputs
+*.automake.outputs
+/scons-build

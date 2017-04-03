@@ -49,8 +49,15 @@ excons.SyncCache()
 
 
 def RequireJpeg(env, static=False):
-   # TODO
-   pass
+   env.Append(CPPPATH=[out_incdir])
+   env.Append(LIBPATH=[out_libdir])
+   if sys.platform != "win32":
+      if static:
+         excons.StaticallyLink(env, "jpeg", silent=True)
+      else:
+         env.Append(LIBS=["jpeg"])
+   else:
+      pass
 
 Export("RequireJpeg")
 

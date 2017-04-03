@@ -24,7 +24,7 @@ if sys.platform == "win32":
               "WITH_12BIT"     : excons.GetArgument("with-12bit",      0, int),
               "NASM"           : os.path.abspath("./win/nasm-2.12.02/nasm.exe")}
 
-   if not env.CMakeConfigure("jpeg", opts=options):
+   if not env.CMakeConfigure("libjpeg", opts=options):
       sys.exit(1)
 
    target = env.CMake(env.CMakeOutputs(),
@@ -44,7 +44,7 @@ else:
 
    os.environ["CFLAGS"] = "-fPIC"
 
-   if not env.AutomakeConfigure("jpeg", opts=options):
+   if not env.AutomakeConfigure("libjpeg", opts=options):
       sys.exit(1)
 
    target = env.Automake(env.AutomakeOutputs(),

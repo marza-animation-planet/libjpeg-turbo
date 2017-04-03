@@ -17,8 +17,11 @@ missing
 .deps/
 .libs/
 Makefile
+
 *.dblite
 excons.cache
 *.automake.inputs
 *.automake.outputs
 /scons-build
+/.build
+

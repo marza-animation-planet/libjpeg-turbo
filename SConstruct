@@ -1,3 +1,4 @@
+import os
 import sys
 import datetime
 import excons
@@ -8,6 +9,11 @@ out_incdir = excons.OutputBaseDirectory() + "/include"
 out_libdir = excons.OutputBaseDirectory() + "/lib"
 
 if sys.platform == "win32":
+   if not os.path.isdir("./win/nasm-2.12.02"):
+      import zipfile
+      zf = zipfile.ZipFile("./win/nasm-2.12.02-win64.zip")
+      zf.extractall("./win")
+
    options = {"WITH_SIMD"      : excons.GetArgument("with-simd",       1, int),
               "WITH_ARITH_ENC" : excons.GetArgument("with-arith-enc",  1, int),
               "WITH_ARITH_DEC" : excons.GetArgument("with-arith-dec",  1, int),
@@ -15,7 +21,8 @@ if sys.platform == "win32":
               "WITH_JPEG8"     : excons.GetArgument("with-jpeg8",      0, int),
               "WITH_MEM_SRCDST": excons.GetArgument("with-mem-srcdst", 1, int),
               "WITH_TURBOJPEG" : excons.GetArgument("with-turbojpeg",  1, int),
-              "WITH_12BIT"     : excons.GetArgument("with-12bit",      0, int)}
+              "WITH_12BIT"     : excons.GetArgument("with-12bit",      0, int),
+              "NASM"           : os.path.abspath("./win/nasm-2.12.02/nasm.exe")}
 
    if not env.CMakeConfigure("jpeg", opts=options):
       sys.exit(1)
@@ -51,13 +58,17 @@ excons.SyncCache()
 def RequireJpeg(env, static=False):
    env.Append(CPPPATH=[out_incdir])
    env.Append(LIBPATH=[out_libdir])
-   if sys.platform != "win32":
-      if static:
+   if static:
+      if sys.platform != "win32":
          excons.StaticallyLink(env, "jpeg", silent=True)
       else:
-         env.Append(LIBS=["jpeg"])
+         # Any define to add?
+         env.Append(LIBS=["jpeg-static"])
    else:
-      pass
+      if sys.platform == "win32":
+         # Any define to add?
+         pass
+      env.Append(LIBS=["jpeg"])
 
 Export("RequireJpeg")
 

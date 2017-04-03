@@ -24,4 +24,5 @@ excons.cache
 *.automake.outputs
 /scons-build
 /.build
+/win/nasm-*/
 

@@ -42,6 +42,8 @@ else:
               "--without-turbojpeg" : excons.GetArgument("with-arith-enc", 1, int) == 0,
               "--with-12bit"        : excons.GetArgument("with-12bit",     0, int) != 0}
 
+   os.environ["CFLAGS"] = "-fPIC"
+
    if not env.AutomakeConfigure("jpeg", opts=options):
       sys.exit(1)
 
@@ -51,11 +53,11 @@ else:
    env.AutomakeClean()
 
 
-env.Alias("jpeg", target)
+env.Alias("libjpeg", target)
 excons.SyncCache()
 
 
-def RequireJpeg(env, static=False):
+def RequireLibjpeg(env, static=False):
    env.Append(CPPPATH=[out_incdir])
    env.Append(LIBPATH=[out_libdir])
    if static:
@@ -70,5 +72,5 @@ def RequireJpeg(env, static=False):
          pass
       env.Append(LIBS=["jpeg"])
 
-Export("RequireJpeg")
+Export("RequireLibjpeg")
 

@@ -8,14 +8,14 @@ out_incdir = excons.OutputBaseDirectory() + "/include"
 out_libdir = excons.OutputBaseDirectory() + "/lib"
 
 if sys.platform == "win32":
-   options = {"WITH_SIMD"      : excons.GetArgument("with-simd",       1, int) != 0,
-              "WITH_ARITH_ENC" : excons.GetArgument("with-arith-enc",  1, int) != 0,
-              "WITH_ARITH_DEC" : excons.GetArgument("with-arith-dec",  1, int) != 0,
-              "WITH_JPEG7"     : excons.GetArgument("with-jpeg7",      0, int) != 0,
-              "WITH_JPEG8"     : excons.GetArgument("with-jpeg8",      0, int) != 0,
-              "WITH_MEM_SRCDST": excons.GetArgument("with-mem-srcdst", 1, int) != 0,
-              "WITH_TURBOJPEG" : excons.GetArgument("with-turbojpeg",  1, int) != 0,
-              "WITH_12BIT"     : excons.GetArgument("with-12bit",      0, int) != 0}
+   options = {"WITH_SIMD"      : excons.GetArgument("with-simd",       1, int),
+              "WITH_ARITH_ENC" : excons.GetArgument("with-arith-enc",  1, int),
+              "WITH_ARITH_DEC" : excons.GetArgument("with-arith-dec",  1, int),
+              "WITH_JPEG7"     : excons.GetArgument("with-jpeg7",      0, int),
+              "WITH_JPEG8"     : excons.GetArgument("with-jpeg8",      0, int),
+              "WITH_MEM_SRCDST": excons.GetArgument("with-mem-srcdst", 1, int),
+              "WITH_TURBOJPEG" : excons.GetArgument("with-turbojpeg",  1, int),
+              "WITH_12BIT"     : excons.GetArgument("with-12bit",      0, int)}
 
    if not env.CMakeConfigure("jpeg", opts=options):
       sys.exit(1)

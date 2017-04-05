@@ -57,25 +57,25 @@ excons.DeclareTargets(env, prjs)
 
 # ==============================================================================
 
+def LibjpegName(static=False):
+   libname = "jpeg"
+   if sys.platform == "win32" and static:
+      libname += "-static"
+   return libname
+
+def LibjpegPath(static=False):
+   name = LibjpegName(static=static)
+   if sys.platform == "win32":
+      libname = name + ".lib"
+   else:
+      libname = "lib" + name + (".a" if static else excons.SharedLibraryLinkExt())
+   return excons.OutputBaseDirectory() + "/lib/" + libname
+
 def RequireLibjpeg(env, static=False):
    env.Append(CPPPATH=[excons.OutputBaseDirectory() + "/include"])
    env.Append(LIBPATH=[excons.OutputBaseDirectory() + "/lib"])
    # Any defines?
-   if static:
-      if sys.platform == "win32":
-         env.Append(LIBS=["jpeg-static"])
-      else:
-         if not excons.StaticallyLink(env, "jpeg", silent=True):
-            env.Append(LIBS=["jpeg"])
-   else:
-      env.Append(LIBS=["jpeg"])
+   excons.Link(env, LibjpegName(static=static), static=static, force=True, silent=True)
 
-def LibjpegName(static=False):
-   if sys.platform == "win32":
-      basename = ("jpeg-static" if static else "jpeg") + ".lib"
-   else:
-      basename = "libjpeg" + (".a" if static else ".so")
-   return excons.OutputBaseDirectory() + "/lib/" + basename
-
-Export("RequireLibjpeg LibjpegName")
+Export("LibjpegName LibjpegPath RequireLibjpeg")
 

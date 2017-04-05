@@ -5,7 +5,7 @@ import excons
 
 env = excons.MakeBaseEnv(output_dir="./scons-build")
 
-libjpeg_srcs = excons.CollectFiles([".", "simd", "md5"], patterns=["*.c", "*.asm", "CMakeLists.txt"], recursive=False)
+libjpeg_srcs = excons.CollectFiles([".", "simd", "md5"], patterns=["*.c", "*.asm"], recursive=False)
 
 if sys.platform == "win32":
    if not os.path.isdir("./win/nasm-2.12.02"):
@@ -24,6 +24,7 @@ if sys.platform == "win32":
                            "WITH_TURBOJPEG" : excons.GetArgument("with-turbojpeg",  1, int),
                            "WITH_12BIT"     : excons.GetArgument("with-12bit",      0, int),
                            "NASM"           : os.path.abspath("./win/nasm-2.12.02/nasm.exe")},
+            "cmake-cfgs": excons.CollectFiles([".", "simd", "md5"], patterns=["CMakeLists.txt"], recursive=False),
             "cmake-srcs": libjpeg_srcs}]
 
 else:
@@ -39,6 +40,7 @@ else:
                               "--without-mem-srcdst": excons.GetArgument("with-arith-enc", 1, int) == 0,
                               "--without-turbojpeg" : excons.GetArgument("with-arith-enc", 1, int) == 0,
                               "--with-12bit"        : excons.GetArgument("with-12bit",     0, int) != 0},
+            "automake-cfgs": excons.CollectFiles([".", "simd", "md5"], patterns=["*.am"], recursive=False),
             "automake-srcs": libjpeg_srcs}]
 
 excons.AddHelpOptions(libjpeg="""%s JPEG OPTIONS

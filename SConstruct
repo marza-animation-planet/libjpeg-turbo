@@ -23,7 +23,8 @@ if sys.platform == "win32":
                            "WITH_MEM_SRCDST": excons.GetArgument("with-mem-srcdst", 1, int),
                            "WITH_TURBOJPEG" : excons.GetArgument("with-turbojpeg",  1, int),
                            "WITH_12BIT"     : excons.GetArgument("with-12bit",      0, int),
-                           "NASM"           : os.path.abspath("./win/nasm-2.12.02/nasm.exe")},
+                           "NASM"           : os.path.abspath("./win/nasm-2.12.02/nasm.exe"),
+                           "WITH_CRT_DLL"   : 1},
             "cmake-cfgs": excons.CollectFiles([".", "simd", "md5"], patterns=["CMakeLists.txt"], recursive=False),
             "cmake-srcs": libjpeg_srcs}]
 
@@ -74,7 +75,9 @@ def LibjpegPath(static=False):
 def RequireLibjpeg(env, static=False):
    env.Append(CPPPATH=[excons.OutputBaseDirectory() + "/include"])
    env.Append(LIBPATH=[excons.OutputBaseDirectory() + "/lib"])
-   # Any defines?
+   if sys.platform == "win32" and not static:
+      # EXTERN macro should be redefined from "extern type" to "__declspec(dllimport) type"
+      pass
    excons.Link(env, LibjpegName(static=static), static=static, force=True, silent=True)
 
 Export("LibjpegName LibjpegPath RequireLibjpeg")

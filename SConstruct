@@ -44,7 +44,7 @@ else:
             "automake-cfgs": excons.CollectFiles([".", "simd", "md5"], patterns=["*.am"], recursive=False),
             "automake-srcs": libjpeg_srcs}]
 
-excons.AddHelpOptions(libjpeg="""%s JPEG OPTIONS
+excons.AddHelpOptions(libjpeg="""JPEG OPTIONS
   with-simd=0|1       : Include SIMD extensions [1]
   with-arith-enc=0|1  : Include arithmetic encoding support when emulating the libjpeg v6b API/ABI [1]
   with-arith-dec=0|1  : Include arithmetic decoding support when emulating the libjpeg v6b API/ABI [1]
@@ -53,7 +53,8 @@ excons.AddHelpOptions(libjpeg="""%s JPEG OPTIONS
   with-mem-srcdst=0|1 : Include in-memory source/destination manager functions when emulating the libjpeg v6b or v7 API/ABI [1]
   with-turbojpeg=0|1  : Include the TurboJPEG wrapper library and associated test programs [1]
   with-12bit=0|1      : Encode/decode JPEG images with 12-bit samples [0]
-                        (implies with-simd=0 with-turbojpeg=0 with-arith-enc=0 with-arith-dec=0)""" % prjs[0]["type"].upper())
+                        (implies with-simd=0 with-turbojpeg=0 with-arith-enc=0 with-arith-dec=0)""")
+
 excons.DeclareTargets(env, prjs)
 
 # ==============================================================================

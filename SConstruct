@@ -7,6 +7,34 @@ env = excons.MakeBaseEnv(output_dir="./scons-build")
 
 libjpeg_srcs = excons.CollectFiles([".", "simd", "md5"], patterns=["*.c", "*.asm"], recursive=False)
 
+def LibjpegName(static=False):
+   libname = "jpeg"
+   if sys.platform == "win32" and static:
+      libname += "-static"
+   return libname
+
+def LibjpegPath(static=False):
+   name = LibjpegName(static=static)
+   if sys.platform == "win32":
+      libname = name + ".lib"
+   else:
+      libname = "lib" + name + (".a" if static else excons.SharedLibraryLinkExt())
+   return excons.OutputBaseDirectory() + "/lib/" + libname
+
+def RequireLibjpeg(env, static=False):
+   env.Append(CPPPATH=[excons.OutputBaseDirectory() + "/include"])
+   env.Append(LIBPATH=[excons.OutputBaseDirectory() + "/lib"])
+   excons.Link(env, LibjpegPath(static=static), static=static, force=True, silent=True)
+
+
+libjpeg_outputs = ["include/jpeglib.h",
+                   "include/turbojpeg.h",
+                   "include/jconfig.h",
+                   "include/jerror.h",
+                   "include/jmorecfg.h",
+                   LibjpegPath(True),
+                   LibjpegPath(False)]
+
 if sys.platform == "win32":
    if not os.path.isdir("./win/nasm-2.12.02"):
       import zipfile
@@ -26,7 +54,8 @@ if sys.platform == "win32":
                            "NASM"           : os.path.abspath("./win/nasm-2.12.02/nasm.exe"),
                            "WITH_CRT_DLL"   : 1},
             "cmake-cfgs": excons.CollectFiles([".", "simd", "md5"], patterns=["CMakeLists.txt"], recursive=False),
-            "cmake-srcs": libjpeg_srcs}]
+            "cmake-srcs": libjpeg_srcs,
+            "cmake-outputs": libjpeg_outputs}]
 
 else:
    os.environ["CFLAGS"] = "-fPIC"
@@ -42,7 +71,8 @@ else:
                               "--without-turbojpeg" : excons.GetArgument("libjpeg-turbojpeg",  1, int) == 0,
                               "--with-12bit"        : excons.GetArgument("libjpeg-12bit",      0, int) != 0},
             "automake-cfgs": excons.CollectFiles([".", "simd", "md5"], patterns=["*.am"], recursive=False),
-            "automake-srcs": libjpeg_srcs}]
+            "automake-srcs": libjpeg_srcs,
+            "automake-outputs": libjpeg_outputs}]
 
 excons.AddHelpOptions(libjpeg="""JPEG OPTIONS
   libjpeg-simd=0|1       : Include SIMD extensions [1]
@@ -56,30 +86,6 @@ excons.AddHelpOptions(libjpeg="""JPEG OPTIONS
                            (implies with-simd=0 with-turbojpeg=0 with-arith-enc=0 with-arith-dec=0)""")
 
 excons.DeclareTargets(env, prjs)
-
-# ==============================================================================
-
-def LibjpegName(static=False):
-   libname = "jpeg"
-   if sys.platform == "win32" and static:
-      libname += "-static"
-   return libname
-
-def LibjpegPath(static=False):
-   name = LibjpegName(static=static)
-   if sys.platform == "win32":
-      libname = name + ".lib"
-   else:
-      libname = "lib" + name + (".a" if static else excons.SharedLibraryLinkExt())
-   return excons.OutputBaseDirectory() + "/lib/" + libname
-
-def RequireLibjpeg(env, static=False):
-   env.Append(CPPPATH=[excons.OutputBaseDirectory() + "/include"])
-   env.Append(LIBPATH=[excons.OutputBaseDirectory() + "/lib"])
-   if sys.platform == "win32" and not static:
-      # EXTERN macro should be redefined from "extern type" to "__declspec(dllimport) type"
-      pass
-   excons.Link(env, LibjpegName(static=static), static=static, force=True, silent=True)
 
 Export("LibjpegName LibjpegPath RequireLibjpeg")
 

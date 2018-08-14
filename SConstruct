@@ -35,23 +35,30 @@ libjpeg_outputs = ["include/jpeglib.h",
                    LibjpegPath(True),
                    LibjpegPath(False)]
 
-if sys.platform == "win32" and not os.path.isdir("./win/nasm-2.12.02"):
-   import zipfile
-   zf = zipfile.ZipFile("./win/nasm-2.12.02-win64.zip")
-   zf.extractall("./win")
+cmake_opts = {"WITH_SIMD"      : excons.GetArgument("libjpeg-simd",       1, int),
+              "WITH_ARITH_ENC" : excons.GetArgument("libjpeg-arith-enc",  1, int),
+              "WITH_ARITH_DEC" : excons.GetArgument("libjpeg-arith-dec",  1, int),
+              "WITH_JPEG7"     : excons.GetArgument("libjpeg-jpeg7",      0, int),
+              "WITH_JPEG8"     : excons.GetArgument("libjpeg-jpeg8",      0, int),
+              "WITH_MEM_SRCDST": excons.GetArgument("libjpeg-mem-srcdst", 1, int),
+              "WITH_TURBOJPEG" : excons.GetArgument("libjpeg-turbojpeg",  1, int),
+              "WITH_12BIT"     : excons.GetArgument("libjpeg-12bit",      0, int)}
+# ENABLE_SHARED : True
+# ENABLE_STATIC : True
+# WITH_JAVA     : False
+# FORCE_INLINE  : True
+
+if sys.platform == "win32":
+   if not os.path.isdir("./win/nasm-2.12.02"):
+      import zipfile
+      zf = zipfile.ZipFile("./win/nasm-2.12.02-win64.zip")
+      zf.extractall("./win")
+   cmake_opts["NASM"] = os.path.abspath("./win/nasm-2.12.02/nasm.exe")
+   cmake_opts["WITH_CRT_DLL"] = 1
 
 prjs = [{"name": "libjpeg",
          "type": "cmake",
-         "cmake-opts": {"WITH_SIMD"      : excons.GetArgument("libjpeg-simd",       1, int),
-                        "WITH_ARITH_ENC" : excons.GetArgument("libjpeg-arith-enc",  1, int),
-                        "WITH_ARITH_DEC" : excons.GetArgument("libjpeg-arith-dec",  1, int),
-                        "WITH_JPEG7"     : excons.GetArgument("libjpeg-jpeg7",      0, int),
-                        "WITH_JPEG8"     : excons.GetArgument("libjpeg-jpeg8",      0, int),
-                        "WITH_MEM_SRCDST": excons.GetArgument("libjpeg-mem-srcdst", 1, int),
-                        "WITH_TURBOJPEG" : excons.GetArgument("libjpeg-turbojpeg",  1, int),
-                        "WITH_12BIT"     : excons.GetArgument("libjpeg-12bit",      0, int),
-                        "NASM"           : os.path.abspath("./win/nasm-2.12.02/nasm.exe"),
-                        "WITH_CRT_DLL"   : 1},
+         "cmake-opts": cmake_opts,
          "cmake-cfgs": excons.CollectFiles([".", "simd", "md5"], patterns=["CMakeLists.txt"], recursive=False),
          "cmake-srcs": libjpeg_srcs,
          "cmake-outputs": libjpeg_outputs}]

@@ -64,10 +64,6 @@ public class TJUnitTest {
     "RGBA", "BGRA", "ABGR", "ARGB", "CMYK"
   };
 
-  private static final int[] alphaOffset = {
-    -1, -1, -1, -1, -1, -1, -1, 3, 3, 0, 0, -1
-  };
-
   private static final int[] _3byteFormats = {
     TJ.PF_RGB, TJ.PF_BGR
   };
@@ -100,43 +96,43 @@ public class TJUnitTest {
 
   private static int biTypePF(int biType) {
     ByteOrder byteOrder = ByteOrder.nativeOrder();
-    switch(biType) {
-      case BufferedImage.TYPE_3BYTE_BGR:
-        return TJ.PF_BGR;
-      case BufferedImage.TYPE_4BYTE_ABGR:
-      case BufferedImage.TYPE_4BYTE_ABGR_PRE:
-        return TJ.PF_ABGR;
-      case BufferedImage.TYPE_BYTE_GRAY:
-        return TJ.PF_GRAY;
-      case BufferedImage.TYPE_INT_BGR:
-        return TJ.PF_RGBX;
-      case BufferedImage.TYPE_INT_RGB:
-        return TJ.PF_BGRX;
-      case BufferedImage.TYPE_INT_ARGB:
-      case BufferedImage.TYPE_INT_ARGB_PRE:
-        return TJ.PF_BGRA;
+    switch (biType) {
+    case BufferedImage.TYPE_3BYTE_BGR:
+      return TJ.PF_BGR;
+    case BufferedImage.TYPE_4BYTE_ABGR:
+    case BufferedImage.TYPE_4BYTE_ABGR_PRE:
+      return TJ.PF_ABGR;
+    case BufferedImage.TYPE_BYTE_GRAY:
+      return TJ.PF_GRAY;
+    case BufferedImage.TYPE_INT_BGR:
+      return TJ.PF_RGBX;
+    case BufferedImage.TYPE_INT_RGB:
+      return TJ.PF_BGRX;
+    case BufferedImage.TYPE_INT_ARGB:
+    case BufferedImage.TYPE_INT_ARGB_PRE:
+      return TJ.PF_BGRA;
     }
     return 0;
   }
 
   private static String biTypeStr(int biType) {
-    switch(biType) {
-      case BufferedImage.TYPE_3BYTE_BGR:
-        return "3BYTE_BGR";
-      case BufferedImage.TYPE_4BYTE_ABGR:
-        return "4BYTE_ABGR";
-      case BufferedImage.TYPE_4BYTE_ABGR_PRE:
-        return "4BYTE_ABGR_PRE";
-      case BufferedImage.TYPE_BYTE_GRAY:
-        return "BYTE_GRAY";
-      case BufferedImage.TYPE_INT_BGR:
-        return "INT_BGR";
-      case BufferedImage.TYPE_INT_RGB:
-        return "INT_RGB";
-      case BufferedImage.TYPE_INT_ARGB:
-        return "INT_ARGB";
-      case BufferedImage.TYPE_INT_ARGB_PRE:
-        return "INT_ARGB_PRE";
+    switch (biType) {
+    case BufferedImage.TYPE_3BYTE_BGR:
+      return "3BYTE_BGR";
+    case BufferedImage.TYPE_4BYTE_ABGR:
+      return "4BYTE_ABGR";
+    case BufferedImage.TYPE_4BYTE_ABGR_PRE:
+      return "4BYTE_ABGR_PRE";
+    case BufferedImage.TYPE_BYTE_GRAY:
+      return "BYTE_GRAY";
+    case BufferedImage.TYPE_INT_BGR:
+      return "INT_BGR";
+    case BufferedImage.TYPE_INT_RGB:
+      return "INT_RGB";
+    case BufferedImage.TYPE_INT_ARGB:
+      return "INT_ARGB";
+    case BufferedImage.TYPE_INT_ARGB_PRE:
+      return "INT_ARGB_PRE";
     }
     return "Unknown";
   }
@@ -146,7 +142,7 @@ public class TJUnitTest {
     int roffset = TJ.getRedOffset(pf);
     int goffset = TJ.getGreenOffset(pf);
     int boffset = TJ.getBlueOffset(pf);
-    int aoffset = alphaOffset[pf];
+    int aoffset = TJ.getAlphaOffset(pf);
     int ps = TJ.getPixelSize(pf);
     int index, row, col, halfway = 16;
 
@@ -215,7 +211,7 @@ public class TJUnitTest {
     int rshift = TJ.getRedOffset(pf) * 8;
     int gshift = TJ.getGreenOffset(pf) * 8;
     int bshift = TJ.getBlueOffset(pf) * 8;
-    int ashift = alphaOffset[pf] * 8;
+    int ashift = TJ.getAlphaOffset(pf) * 8;
     int index, row, col, halfway = 16;
 
     Arrays.fill(buf, 0);
@@ -246,6 +242,7 @@ public class TJUnitTest {
                               throws Exception {
     WritableRaster wr = img.getRaster();
     int imgType = img.getType();
+
     if (imgType == BufferedImage.TYPE_INT_RGB ||
         imgType == BufferedImage.TYPE_INT_BGR ||
         imgType == BufferedImage.TYPE_INT_ARGB ||
@@ -298,13 +295,16 @@ public class TJUnitTest {
     int roffset = TJ.getRedOffset(pf);
     int goffset = TJ.getGreenOffset(pf);
     int boffset = TJ.getBlueOffset(pf);
-    int aoffset = alphaOffset[pf];
+    int aoffset = TJ.getAlphaOffset(pf);
     int ps = TJ.getPixelSize(pf);
     int index, row, col, retval = 1;
     int halfway = 16 * sf.getNum() / sf.getDenom();
     int blockSize = 8 * sf.getNum() / sf.getDenom();
 
     try {
+
+      if (pf == TJ.PF_GRAY)
+        roffset = goffset = boffset = 0;
 
       if (pf == TJ.PF_CMYK) {
         for (row = 0; row < h; row++) {
@@ -382,7 +382,7 @@ public class TJUnitTest {
           checkVal255(row, col, a, "A");
         }
       }
-    } catch(Exception e) {
+    } catch (Exception e) {
       System.out.println("\n" + e.getMessage());
       retval = 0;
     }
@@ -422,7 +422,7 @@ public class TJUnitTest {
     int rshift = TJ.getRedOffset(pf) * 8;
     int gshift = TJ.getGreenOffset(pf) * 8;
     int bshift = TJ.getBlueOffset(pf) * 8;
-    int ashift = alphaOffset[pf] * 8;
+    int ashift = TJ.getAlphaOffset(pf) * 8;
     int index, row, col, retval = 1;
     int halfway = 16 * sf.getNum() / sf.getDenom();
     int blockSize = 8 * sf.getNum() / sf.getDenom();
@@ -472,7 +472,7 @@ public class TJUnitTest {
           checkVal255(row, col, a, "A");
         }
       }
-    } catch(Exception e) {
+    } catch (Exception e) {
       System.out.println("\n" + e.getMessage());
       retval = 0;
     }
@@ -579,7 +579,7 @@ public class TJUnitTest {
           }
         }
       }
-    } catch(Exception e) {
+    } catch (Exception e) {
       System.out.println("\n" + e.getMessage());
       retval = 0;
     }
@@ -668,7 +668,7 @@ public class TJUnitTest {
                         subNameLong[subsamp]);
       YUVImage yuvImage = tjc.encodeYUV(pad, flags);
       if (checkBufYUV(yuvImage.getBuf(), yuvImage.getSize(), w, h, subsamp,
-          new TJScalingFactor(1, 1)) == 1)
+                      new TJScalingFactor(1, 1)) == 1)
         System.out.print("Passed.\n");
       else {
         System.out.print("FAILED!\n");
@@ -729,7 +729,7 @@ public class TJUnitTest {
 
     if (doYUV) {
       System.out.format("JPEG -> YUV %s ", subNameLong[subsamp]);
-      if(!sf.isOne())
+      if (!sf.isOne())
         System.out.format("%d/%d ... ", sf.getNum(), sf.getDenom());
       else System.out.print("... ");
       YUVImage yuvImage = tjd.decompressToYUV(scaledWidth, pad, scaledHeight,
@@ -746,7 +746,7 @@ public class TJUnitTest {
       tjd.setSourceImage(yuvImage);
     } else {
       System.out.format("JPEG -> %s %s ", pfStrLong, buStrLong);
-      if(!sf.isOne())
+      if (!sf.isOne())
         System.out.format("%d/%d ... ", sf.getNum(), sf.getDenom());
       else System.out.print("... ");
     }
@@ -828,7 +828,7 @@ public class TJUnitTest {
         }
       }
       System.out.print("--------------------\n\n");
-    } catch(Exception e) {
+    } catch (Exception e) {
       if (tjc != null) tjc.close();
       if (tjd != null) tjd.close();
       throw e;
@@ -889,7 +889,7 @@ public class TJUnitTest {
         }
       }
       System.out.println("Done.      ");
-    } catch(Exception e) {
+    } catch (Exception e) {
       if (tjc != null) tjc.close();
       throw e;
     }
@@ -950,7 +950,7 @@ public class TJUnitTest {
         doTest(48, 48, onlyRGB, TJ.SAMP_GRAY, "javatest_yuv0");
         doTest(48, 48, onlyGray, TJ.SAMP_GRAY, "javatest_yuv0");
       }
-    } catch(Exception e) {
+    } catch (Exception e) {
       e.printStackTrace();
       exitStatus = -1;
     }

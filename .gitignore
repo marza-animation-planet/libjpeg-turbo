@@ -1,8 +1,5 @@
-*.dblite
-excons.cache
-*.automake.*
-*.automake.*
+/*.dblite
+/excons.cache
 /scons-build
 /.build
 /win/nasm-*/
-

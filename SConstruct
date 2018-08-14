@@ -35,44 +35,26 @@ libjpeg_outputs = ["include/jpeglib.h",
                    LibjpegPath(True),
                    LibjpegPath(False)]
 
-if sys.platform == "win32":
-   if not os.path.isdir("./win/nasm-2.12.02"):
-      import zipfile
-      zf = zipfile.ZipFile("./win/nasm-2.12.02-win64.zip")
-      zf.extractall("./win")
+if sys.platform == "win32" and not os.path.isdir("./win/nasm-2.12.02"):
+   import zipfile
+   zf = zipfile.ZipFile("./win/nasm-2.12.02-win64.zip")
+   zf.extractall("./win")
 
-   prjs = [{"name": "libjpeg",
-            "type": "cmake",
-            "cmake-opts": {"WITH_SIMD"      : excons.GetArgument("libjpeg-simd",       1, int),
-                           "WITH_ARITH_ENC" : excons.GetArgument("libjpeg-arith-enc",  1, int),
-                           "WITH_ARITH_DEC" : excons.GetArgument("libjpeg-arith-dec",  1, int),
-                           "WITH_JPEG7"     : excons.GetArgument("libjpeg-jpeg7",      0, int),
-                           "WITH_JPEG8"     : excons.GetArgument("libjpeg-jpeg8",      0, int),
-                           "WITH_MEM_SRCDST": excons.GetArgument("libjpeg-mem-srcdst", 1, int),
-                           "WITH_TURBOJPEG" : excons.GetArgument("libjpeg-turbojpeg",  1, int),
-                           "WITH_12BIT"     : excons.GetArgument("libjpeg-12bit",      0, int),
-                           "NASM"           : os.path.abspath("./win/nasm-2.12.02/nasm.exe"),
-                           "WITH_CRT_DLL"   : 1},
-            "cmake-cfgs": excons.CollectFiles([".", "simd", "md5"], patterns=["CMakeLists.txt"], recursive=False),
-            "cmake-srcs": libjpeg_srcs,
-            "cmake-outputs": libjpeg_outputs}]
-
-else:
-   os.environ["CFLAGS"] = "-fPIC"
-
-   prjs = [{"name": "libjpeg",
-            "type": "automake",
-            "automake-opts": {"--without-simd"      : excons.GetArgument("libjpeg-simd",       1, int) == 0,
-                              "--without-arith-enc" : excons.GetArgument("libjpeg-arith-enc",  1, int) == 0,
-                              "--without-arith-dec" : excons.GetArgument("libjpeg-arith-dec",  1, int) == 0,
-                              "--with-jpeg7"        : excons.GetArgument("libjpeg-jpeg7",      0, int) != 0,
-                              "--with-jpeg8"        : excons.GetArgument("libjpeg-jpeg8",      0, int) != 0,
-                              "--without-mem-srcdst": excons.GetArgument("libjpeg-mem-srcdst", 1, int) == 0,
-                              "--without-turbojpeg" : excons.GetArgument("libjpeg-turbojpeg",  1, int) == 0,
-                              "--with-12bit"        : excons.GetArgument("libjpeg-12bit",      0, int) != 0},
-            "automake-cfgs": excons.CollectFiles([".", "simd", "md5"], patterns=["*.am"], recursive=False),
-            "automake-srcs": libjpeg_srcs,
-            "automake-outputs": libjpeg_outputs}]
+prjs = [{"name": "libjpeg",
+         "type": "cmake",
+         "cmake-opts": {"WITH_SIMD"      : excons.GetArgument("libjpeg-simd",       1, int),
+                        "WITH_ARITH_ENC" : excons.GetArgument("libjpeg-arith-enc",  1, int),
+                        "WITH_ARITH_DEC" : excons.GetArgument("libjpeg-arith-dec",  1, int),
+                        "WITH_JPEG7"     : excons.GetArgument("libjpeg-jpeg7",      0, int),
+                        "WITH_JPEG8"     : excons.GetArgument("libjpeg-jpeg8",      0, int),
+                        "WITH_MEM_SRCDST": excons.GetArgument("libjpeg-mem-srcdst", 1, int),
+                        "WITH_TURBOJPEG" : excons.GetArgument("libjpeg-turbojpeg",  1, int),
+                        "WITH_12BIT"     : excons.GetArgument("libjpeg-12bit",      0, int),
+                        "NASM"           : os.path.abspath("./win/nasm-2.12.02/nasm.exe"),
+                        "WITH_CRT_DLL"   : 1},
+         "cmake-cfgs": excons.CollectFiles([".", "simd", "md5"], patterns=["CMakeLists.txt"], recursive=False),
+         "cmake-srcs": libjpeg_srcs,
+         "cmake-outputs": libjpeg_outputs}]
 
 excons.AddHelpOptions(libjpeg="""JPEG OPTIONS
   libjpeg-simd=0|1       : Include SIMD extensions [1]

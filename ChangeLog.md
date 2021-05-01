@@ -1,3 +1,64 @@
+2.0.0
+=====
+
+### Significant changes relative to 2.0 beta1:
+
+1. The TurboJPEG API can now decompress CMYK JPEG images that have subsampled M
+and Y components (not to be confused with YCCK JPEG images, in which the C/M/Y
+components have been transformed into luma and chroma.)   Previously, an error
+was generated ("Could not determine subsampling type for JPEG image") when such
+an image was passed to `tjDecompressHeader3()`, `tjTransform()`,
+`tjDecompressToYUVPlanes()`, `tjDecompressToYUV2()`, or the equivalent Java
+methods.
+
+2. Fixed an issue (CVE-2018-11813) whereby a specially-crafted malformed input
+file (specifically, a file with a valid Targa header but incomplete pixel data)
+would cause cjpeg to generate a JPEG file that was potentially thousands of
+times larger than the input file.  The Targa reader in cjpeg was not properly
+detecting that the end of the input file had been reached prematurely, so after
+all valid pixels had been read from the input, the reader injected dummy pixels
+with values of 255 into the JPEG compressor until the number of pixels
+specified in the Targa header had been compressed.  The Targa reader in cjpeg
+now behaves like the PPM reader and aborts compression if the end of the input
+file is reached prematurely.  Because this issue only affected cjpeg and not
+the underlying library, and because it did not involve any out-of-bounds reads
+or other exploitable behaviors, it was not believed to represent a security
+threat.
+
+3. Fixed an issue whereby the `tjLoadImage()` and `tjSaveImage()` functions
+would produce a "Bogus message code" error message if the underlying bitmap and
+PPM readers/writers threw an error that was specific to the readers/writers
+(as opposed to a general libjpeg API error.)
+
+4. Fixed an issue whereby a specially-crafted malformed BMP file, one in which
+the header specified an image width of 1073741824 pixels, would trigger a
+floating point exception (division by zero) in the `tjLoadImage()` function
+when attempting to load the BMP file into a 4-component image buffer.
+
+5. Fixed an issue whereby certain combinations of calls to
+`jpeg_skip_scanlines()` and `jpeg_read_scanlines()` could trigger an infinite
+loop when decompressing progressive JPEG images that use vertical chroma
+subsampling (for instance, 4:2:0 or 4:4:0.)
+
+6. Fixed a segfault in `jpeg_skip_scanlines()` that occurred when decompressing
+a 4:2:2 or 4:2:0 JPEG image using the merged (non-fancy) upsampling algorithms
+(that is, when setting `cinfo.do_fancy_upsampling` to `FALSE`.)
+
+7. The new CMake-based build system will now disable the MIPS DSPr2 SIMD
+extensions if it detects that the compiler does not support DSPr2 instructions.
+
+8. Fixed out-of-bounds read in cjpeg that occurred when attempting to compress
+a specially-crafted malformed color-index (8-bit-per-sample) BMP file in which
+some of the samples (color indices) exceeded the bounds of the BMP file's color
+table.
+
+9. Fixed a signed integer overflow in the progressive Huffman decoder, detected
+by the Clang and GCC undefined behavior sanitizers, that could be triggered by
+attempting to decompress a specially-crafted malformed JPEG image.  This issue
+did not pose a security threat, but removing the warning made it easier to
+detect actual security issues, should they arise in the future.
+
+
 1.5.90 (2.0 beta1)
 ==================
 
@@ -305,8 +366,8 @@ specified.)
 2x2 luminance sampling factors and 2x1 or 1x2 chrominance sampling factors.
 This is a non-standard way of specifying 2x subsampling (normally 4:2:2 JPEGs
 have 2x1 luminance and 1x1 chrominance sampling factors, and 4:4:0 JPEGs have
-1x2 luminance and 1x1 chrominance sampling factors), but the JPEG specification
-and the libjpeg API both allow it.
+1x2 luminance and 1x1 chrominance sampling factors), but the JPEG format and
+the libjpeg API both allow it.
 
 7. Fixed an unsigned integer overflow in the libjpeg memory manager, detected
 by the Clang undefined behavior sanitizer, that could be triggered by

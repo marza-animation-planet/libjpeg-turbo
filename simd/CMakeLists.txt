@@ -91,19 +91,16 @@ message(STATUS "CMAKE_ASM_NASM_FLAGS = ${EFFECTIVE_ASM_NASM_FLAGS}")
 
 set(CMAKE_ASM_NASM_FLAGS "${CMAKE_ASM_NASM_FLAGS} -I\"${CMAKE_CURRENT_SOURCE_DIR}/nasm/\" -I\"${CMAKE_CURRENT_SOURCE_DIR}/${CPU_TYPE}/\"")
 
-if(WIN32)
-  set(CMAKE_ASM_NASM_FLAGS "${CMAKE_ASM_NASM_FLAGS} -I\"${CMAKE_CURRENT_SOURCE_DIR}/../win/\"")
-  set(JSIMDCFG_INC ${CMAKE_CURRENT_SOURCE_DIR}/../win/jsimdcfg.inc)
-else()
-  set(GREP grep)
-  if(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
-    set(GREP ggrep)
-  endif()
-  add_custom_command(OUTPUT jsimdcfg.inc
-    COMMAND ${CMAKE_C_COMPILER} -E -I${CMAKE_BINARY_DIR} -I${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/jsimdcfg.inc.h | ${GREP} -E '^[\;%]|^\ %' | sed 's%_cpp_protection_%%' | sed 's@% define@%define@g' >jsimdcfg.inc)
-  set(JSIMDCFG_INC ${CMAKE_CURRENT_BINARY_DIR}/jsimdcfg.inc)
-  set(CMAKE_ASM_NASM_FLAGS "${CMAKE_ASM_NASM_FLAGS} -I\"${CMAKE_CURRENT_BINARY_DIR}/\"")
+set(GREP grep)
+if(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
+  set(GREP ggrep)
 endif()
+add_custom_target(jsimdcfg COMMAND
+  ${CMAKE_C_COMPILER} -E -I${CMAKE_BINARY_DIR} -I${CMAKE_CURRENT_BINARY_DIR}
+    -I${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/nasm/jsimdcfg.inc.h |
+  ${GREP} -E '^[\;%]|^\ %' | sed 's%_cpp_protection_%%' |
+  sed 's@% define@%define@g' >${CMAKE_CURRENT_SOURCE_DIR}/nasm/jsimdcfg.inc)
 
 if(CPU_TYPE STREQUAL "x86_64")
   set(SIMD_SOURCES x86_64/jsimdcpu.asm x86_64/jfdctflt-sse.asm
@@ -164,7 +161,7 @@ foreach(file ${SIMD_SOURCES})
     set(OBJECT_DEPENDS ${OBJECT_DEPENDS}
       ${CMAKE_CURRENT_SOURCE_DIR}/${DEPFILE})
   endif()
-  set(OBJECT_DEPENDS ${OBJECT_DEPENDS} ${INC_FILES} ${JSIMDCFG_INC})
+  set(OBJECT_DEPENDS ${OBJECT_DEPENDS} ${INC_FILES})
   if(MSVC_IDE)
     # The CMake Visual Studio generators do not work properly with the ASM_NASM
     # language, so we have to go rogue here and use a custom command like we
@@ -272,6 +269,29 @@ enable_language(ASM)
 string(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_UC)
 set(EFFECTIVE_ASM_FLAGS "${CMAKE_ASM_FLAGS} ${CMAKE_ASM_FLAGS_${CMAKE_BUILD_TYPE_UC}}")
 message(STATUS "CMAKE_ASM_FLAGS = ${EFFECTIVE_ASM_FLAGS}")
+
+set(CMAKE_REQUIRED_FLAGS -mdspr2)
+
+check_c_source_compiles("
+  #if !(defined(__mips__) && __mips_isa_rev >= 2)
+  #error MIPS DSPr2 is currently only available on MIPS32r2 platforms.
+  #endif
+  int main(void) {
+    int c = 0, a = 0, b = 0;
+    __asm__ __volatile__ (
+      \"precr.qb.ph %[c], %[a], %[b]\"
+      : [c] \"=r\" (c)
+      : [a] \"r\" (a), [b] \"r\" (b)
+    );
+    return c;
+  }" HAVE_DSPR2)
+
+unset(CMAKE_REQUIRED_FLAGS)
+
+if(NOT HAVE_DSPR2)
+  simd_fail("SIMD extensions not available for this CPU")
+  return()
+endif()
 
 add_library(simd OBJECT ${CPU_TYPE}/jsimd_dspr2.S ${CPU_TYPE}/jsimd.c)
 

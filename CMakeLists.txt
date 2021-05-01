@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 2.8.12)
 
+if(CMAKE_EXECUTABLE_SUFFIX)
+  set(CMAKE_EXECUTABLE_SUFFIX_TMP ${CMAKE_EXECUTABLE_SUFFIX})
+endif()
+
 project(libjpeg-turbo C)
-set(VERSION 1.5.90)
+set(VERSION 2.0.0)
 string(REPLACE "." ";" VERSION_TRIPLET ${VERSION})
 list(GET VERSION_TRIPLET 0 VERSION_MAJOR)
 list(GET VERSION_TRIPLET 1 VERSION_MINOR)
@@ -351,6 +355,9 @@ if(SIZE_T EQUAL UNSIGNED_LONG)
   check_c_source_compiles("int main(int argc, char **argv) { unsigned long a = argc;  return __builtin_ctzl(a); }"
     HAVE_BUILTIN_CTZL)
 endif()
+if(MSVC)
+  check_include_files("intrin.h" HAVE_INTRIN_H)
+endif()
 
 if(UNIX)
   # Check for headers
@@ -360,9 +367,9 @@ if(UNIX)
   check_include_files(sys/types.h NEED_SYS_TYPES_H)
 
   # Check for functions
-  include(CheckFunctionExists)
-  check_function_exists(memset HAVE_MEMSET)
-  check_function_exists(memcpy HAVE_MEMCPY)
+  include(CheckSymbolExists)
+  check_symbol_exists(memset string.h HAVE_MEMSET)
+  check_symbol_exists(memcpy string.h HAVE_MEMCPY)
   if(NOT HAVE_MEMSET AND NOT HAVE_MEMCPY)
     set(NEED_BSD_STRINGS 1)
   endif()
@@ -372,7 +379,7 @@ if(UNIX)
   check_type_size("unsigned short" UNSIGNED_SHORT)
 
   # Check for compiler features
-  check_c_source_compiles("int main(void) { typedef struct undefined_structure *undef_struct_ptr; }"
+  check_c_source_compiles("int main(void) { typedef struct undefined_structure *undef_struct_ptr;  undef_struct_ptr ptr = 0;  return ptr != 0; }"
     INCOMPLETE_TYPES)
   if(INCOMPLETE_TYPES)
     message(STATUS "Compiler supports pointers to undefined structures.")
@@ -415,7 +422,6 @@ if(UNIX)
 endif()
 
 if(MSVC)
-  check_include_files("intrin.h" HAVE_INTRIN_H)
   set(INLINE_OPTIONS "__inline;inline")
 else()
   set(INLINE_OPTIONS "__inline__;inline")
@@ -431,7 +437,7 @@ if(FORCE_INLINE)
   endif()
 endif()
 foreach(inline ${INLINE_OPTIONS})
-  check_c_source_compiles("${inline} static void foo(void) {} int main(void) { foo(); }"
+  check_c_source_compiles("${inline} static int foo(void) { return 0; } int main(void) { return foo(); }"
     INLINE_WORKS)
   if(INLINE_WORKS)
     set(INLINE ${inline})
@@ -495,6 +501,11 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 ###############################################################################
 # TARGETS
 ###############################################################################
+
+if(CMAKE_EXECUTABLE_SUFFIX_TMP)
+  set(CMAKE_EXECUTABLE_SUFFIX ${CMAKE_EXECUTABLE_SUFFIX_TMP})
+endif()
+message(STATUS "CMAKE_EXECUTABLE_SUFFIX = ${CMAKE_EXECUTABLE_SUFFIX}")
 
 set(JPEG_SOURCES jcapimin.c jcapistd.c jccoefct.c jccolor.c jcdctmgr.c jchuff.c
   jcicc.c jcinit.c jcmainct.c jcmarker.c jcmaster.c jcomapi.c jcparam.c
@@ -566,7 +577,8 @@ if(WITH_TURBOJPEG)
     if(MINGW)
       set_target_properties(turbojpeg PROPERTIES LINK_FLAGS -Wl,--kill-at)
     endif()
-    if(APPLE)
+    if(APPLE AND (NOT CMAKE_OSX_DEPLOYMENT_TARGET OR
+                  CMAKE_OSX_DEPLOYMENT_TARGET VERSION_GREATER 10.4))
       if(NOT CMAKE_SHARED_LIBRARY_RUNTIME_C_FLAG)
         set(CMAKE_SHARED_LIBRARY_RUNTIME_C_FLAG "-Wl,-rpath,")
       endif()
@@ -1308,9 +1320,7 @@ endif()
 # INSTALLATION
 ###############################################################################
 
-if(WIN32)
-  set(EXE ".exe")
-endif()
+set(EXE ${CMAKE_EXECUTABLE_SUFFIX})
 
 if(WITH_TURBOJPEG)
   if(ENABLE_SHARED)

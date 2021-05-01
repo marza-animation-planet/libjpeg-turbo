@@ -2,6 +2,7 @@ import os
 import sys
 import datetime
 import excons
+import SCons.Script # pylint: disable=import-error
 
 env = excons.MakeBaseEnv(output_dir="./scons-build")
 
@@ -87,5 +88,5 @@ excons.AddHelpOptions(libjpeg="""JPEG OPTIONS
 
 excons.DeclareTargets(env, prjs)
 
-Export("LibjpegName LibjpegPath RequireLibjpeg")
+SCons.Script.Export("LibjpegName LibjpegPath RequireLibjpeg")
 

@@ -2,6 +2,7 @@ import os
 import sys
 import datetime
 import excons
+import SCons.Script # pylint: disable=import-error
 
 env = excons.MakeBaseEnv(output_dir="./scons-build")
 
@@ -42,7 +43,9 @@ cmake_opts = {"WITH_SIMD"      : excons.GetArgument("libjpeg-simd",       1, int
               "WITH_JPEG8"     : excons.GetArgument("libjpeg-jpeg8",      0, int),
               "WITH_MEM_SRCDST": excons.GetArgument("libjpeg-mem-srcdst", 1, int),
               "WITH_TURBOJPEG" : excons.GetArgument("libjpeg-turbojpeg",  1, int),
-              "WITH_12BIT"     : excons.GetArgument("libjpeg-12bit",      0, int)}
+              "WITH_12BIT"     : excons.GetArgument("libjpeg-12bit",      0, int),
+              "CMAKE_INSTALL_DEFAULT_LIBDIR": "lib",
+              "CMAKE_POSITION_INDEPENDENT_CODE": 1}
 # ENABLE_SHARED : True
 # ENABLE_STATIC : True
 # WITH_JAVA     : False
@@ -76,5 +79,5 @@ excons.AddHelpOptions(libjpeg="""JPEG OPTIONS
 
 excons.DeclareTargets(env, prjs)
 
-Export("LibjpegName LibjpegPath RequireLibjpeg")
+SCons.Script.Export("LibjpegName LibjpegPath RequireLibjpeg")
 

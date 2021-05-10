@@ -13,3 +13,4 @@
 /configure
 /autom4te.cache/traces.*
 /autom4te.cache/output.*
+/config.h.in~

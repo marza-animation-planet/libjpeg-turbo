@@ -10,3 +10,6 @@
 /win/nasm-*/
 /*.dblite
 /*.automake.*
+/configure
+/autom4te.cache/traces.*
+/autom4te.cache/output.*
